@@ -1,0 +1,216 @@
+//// Luis A Fuentes
+//// Project 9
+
+int many=3;
+Purple jim, al, kurt;
+Ship shipa;
+
+float surface;
+float moonX=0, moonY=100;
+int score=0, cargo=0;
+
+//// SETUP:  size & reset.
+void setup() {
+  size( 800, 600 );
+  reset();
+}
+// Constuct Purple(s).
+void reset() {
+  surface=  random(  height/4, height/2 );
+  moonY=  surface/3;
+  moonY=  random( 200, surface+200 );
+  // 3 Purples.
+  jim=  new Purple( "jim", width/4  );
+  al=  new Purple( "al", width/2 );
+  kurt=  new Purple( "kurt", width*3/4 );
+  shipa=  new Ship();
+}
+
+
+//// NEXT FRAME:  scene, action
+void draw() {
+  scene();
+  show();
+  action();
+  fill(0);
+  text( "Three Purples(squids)", width/3, 20 );
+  text( "Luis Fuentes", 10, height-10 );
+  if (score>0) text( "SCORE:  "+score, width*3/4, 20 );
+}
+void scene() {
+  background( 50,150,200 );      // Dark sky.
+  // Moon
+  if (moonX > width+100) {
+    moonX=  -20;
+    moonY=  random( 100, surface+150 );
+  }
+  moonX += 1;
+  fill(  200, 250, 50 );
+  ellipse( moonX, moonY-150*sin( PI * moonX/width ), 40,40 );
+  // water.
+  fill( 0,100,150 );
+  rect( 0,surface, width, height-surface );  
+}
+void action() {
+  jim.move();
+  al.move();
+  kurt.move();
+  shipa.move();
+  // Catch fish.
+  int caught=0;  
+  if (jim.hit( shipa.x,surface )) caught += jim.legs;
+  if (al.hit( shipa.x,surface )) caught += al.legs;
+  if (kurt.hit( shipa.x,surface )) caught += kurt.legs;
+  cargo += caught;
+  // Move Ship.
+  shipa.x += shipa.dx;
+  if (caught>0) shipa.x += 2*shipa.dx;    // Move Ship away from catch.
+  // End of voyage?
+  if (shipa.x>width)  {
+     shipa.dx = -random( 0.5, 3 );    // Turn around
+  }
+  if (shipa.x<0) {
+    score += cargo;
+    cargo=0;
+    shipa.dx = + random( 1, 5 );
+  }
+}
+void show() {
+  jim.show(); 
+  al.show(); 
+  kurt.show(); 
+  //
+  shipa.show();
+}
+
+
+//// EVENT HANDLERS:  keys, clicks ////
+void keyPressed() {
+  if (key == 'r') reset();
+}
+
+
+//// OBJECTS ////
+class Purple {
+  float x,y;        // Coordinates
+  float dx=0,dy=0;  // Speed
+  float w=30,h=30;
+  int legs=10;      // Number of legs.
+  String name="";
+  float r,g,b;      // Color.
+  int count=0;
+  //// CONSTRUCTORS ////
+  Purple( String s, float x ) {
+    this.name=  s;
+    this.x=x;
+    floor();
+    // Purplish
+    r=  random(100, 255);
+    g=  random(0, 100);
+    b=  random(100, 250);
+  }
+  //// Start again at floor.  (Random speed.)
+  void floor() {
+    y=  height - h*2;
+    dy=  -random( 0.1, 0.9 );
+    legs=  int( random(1, 10.9) );
+  }
+  //// METHODS:  move & show ////
+  void move() {
+    x += dx;
+    y += dy;
+    if (y>height) { 
+      floor();
+    }
+    else if (y<surface) { 
+      dy=  -2 * dy;        // Descend fast!
+    }
+  }
+  //// Display the creature.
+  void show() {
+    fill(r,g,b);
+    stroke(r,g,b);
+    ellipse( x,y, w,h );         // round top
+    rect( x-w/2,y, w,h/2 );      // flat floor
+    fill(255);
+    float blink=10;
+    if ( y%100 > 80) blink=2;
+    ellipse( x,y-h/4, 10, blink );     // eye
+    // Legs
+    fill(r,g,b);                 // legs.
+    float legX=  x-w/2, foot=0;
+    if (dy<0) {
+      foot=5;
+      if (y%50 > 25) foot=  -foot;
+      //--  if (frameCount/30 %  2 > 0) foot=  -foot;
+    }
+    for (int i=0; i<legs; i++) {
+      line( legX, y+h/2, legX+foot, 20+y+h/2 );
+      legX += w / (legs-1);
+    }
+    fill(200,200,0);
+    //  text( name+"("+legs+")", x-w/2, y-20 );
+    text( name, x-w/2, y+h/2 );
+  }
+  //// Return true if near
+  boolean hit( float xx, float yy ) {
+    return dist( xx,yy, x,y ) < h;
+  }
+}
+
+
+class Ship {
+  float x=0, dx=5; 
+  //// METHODS:  move, show
+  void move() {
+  }
+  void show() {
+  // Ship.
+  fill(200, 175, 250,250);
+  noStroke();
+  rect( x, surface-40, 100, 40 );
+  
+  fill(155, 0, 0);
+  triangle(x+75, surface-61, x+75, surface-40, x+100, surface-40);/////////////////////////////
+  triangle(x+25, surface-61, x+25, surface-40, x, surface-40);/////////////////////////////
+  strokeWeight(3);
+  strokeWeight(3);
+  fill(250, 250, 250);
+  stroke(150,50,50);
+  ellipse(x+50, surface-18,30,30);
+  fill(150,50,50);
+  textSize(47);                                             ////naming the ship.........A is the first letter of my middle name: Angel
+  line(x+32, surface-16,x+68, surface-16);
+  text("A",x+35, surface-4);
+  noStroke();
+  textSize(13);
+  if (dx>0)  { fill(200, 175, 250);
+    triangle( x, surface, x, surface-40, x-40, surface-40 );
+    triangle( x+100, surface, x+100, surface-40, x+140, surface-40 );
+    fill(155, 0, 0);
+    rect( x+25, surface-60, 50, 20 );    
+    fill(255, 100, 50);/// Cabin & mast.
+    rect( x+45, surface-80, 10, 20 );
+    fill(255);
+    rect( x+30, surface-57, 42, 14 );
+    fill(0);
+  }
+  else           { fill(200, 175, 250); 
+    triangle( x+100, surface, x+100, surface-40, x+140, surface-40 );
+    triangle( x, surface, x, surface-40, x-40, surface-40 );
+    fill(155, 0, 0);
+    rect( x+25, surface-60, 50, 20 ); 
+    fill(255, 100, 50);// Cabin & mast.
+    rect( x+45, surface-80, 10, 20 );
+    fill(255);
+    rect( x+30, surface-57, 42, 14 );
+    fill(0);}
+  if (cargo>0) text( cargo, x+10, surface-20 );
+  // Smoke
+  fill(  150, 150, 150, 200 );
+  ellipse( x +50 -10*dx, surface-100, 30, 30 );
+  ellipse( x +50 -20*dx, surface-110, 20, 20 );
+  ellipse( x +50 -30*dx, surface-120, 10, 10 );
+    
+  }
+}
